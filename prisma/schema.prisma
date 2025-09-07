@@ -1,0 +1,161 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Hostel {
+  id        Int      @id @default(autoincrement())
+  name      String   // "Old Hostel 1".."7"
+  code      String   @unique // "H1".."H7"
+  rooms     Room[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Room {
+  id           Int           @id @default(autoincrement())
+  hostelId     Int
+  name         String        // e.g., "Common Room A"
+  type         RoomType      // STUDY | INVENTORY | OTHER
+  status       RoomStatus    @default(ACTIVE) // ACTIVE | BLOCKED | MAINTENANCE
+  capacity     Int           @default(12)
+  amenities    String[]      // ["Whiteboard", "Projector"]
+  bookings     Booking[]
+  damageReports DamageReport[]
+  qrTag        String?       @unique // for check-in/out scanning
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  hostel Hostel @relation(fields: [hostelId], references: [id])
+  @@index([hostelId])
+}
+
+enum RoomType { 
+  STUDY 
+  INVENTORY 
+  OTHER 
+}
+
+enum RoomStatus { 
+  ACTIVE 
+  BLOCKED 
+  MAINTENANCE 
+}
+
+enum BookingStatus { 
+  PENDING 
+  CONFIRMED 
+  CHECKED_IN 
+  COMPLETED 
+  NO_SHOW 
+  CANCELLED 
+}
+
+enum DamageStatus { 
+  REPORTED 
+  UNDER_REVIEW 
+  CONFIRMED 
+  DISMISSED 
+  SETTLED 
+}
+
+enum Role { 
+  STUDENT 
+  WARDEN 
+  ADMIN 
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  role        Role     @default(STUDENT)
+  phone       String?
+  dept        String?
+  year        Int?
+  bannedUntil DateTime?
+  lastUsedAt  DateTime?
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  roomId          Int
+  userId          String
+  startTime       DateTime
+  endTime         DateTime
+  status          BookingStatus @default(PENDING)
+  partySize       Int           @default(1)
+  purpose         String?
+  checkInAt       DateTime?
+  checkOutAt      DateTime?
+  damageReports   DamageReport[]
+  fairnessScore   BookingFairnessSnapshot?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  room Room @relation(fields: [roomId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([roomId, startTime])
+  @@index([userId, startTime])
+  @@unique([roomId, startTime, endTime]) // optimistic guard
+}
+
+model BookingFairnessSnapshot {
+  id           String   @id @default(cuid())
+  bookingId    String   @unique
+  userId       String
+  dailyCount   Int      // bookings today by user
+  weeklyCount  Int
+  lastUseAt    DateTime?
+  penaltyScore Int      // for no-shows/damages
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+}
+
+model DamageReport {
+  id          String       @id @default(cuid())
+  bookingId   String
+  roomId      Int
+  reporterId  String       // student or warden
+  description String
+  photos      String[]     // S3 keys
+  status      DamageStatus @default(REPORTED)
+  assessedBy  String?
+  assessedAt  DateTime?
+  penalty     Int?         // in campus currency or amount
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  room    Room    @relation(fields: [roomId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String   // BOOK_CREATE, BOOK_CANCEL, CHECK_IN, CHECK_OUT, DAMAGE_REPORT, etc.
+  target    String?  // bookingId/roomId
+  meta      Json?
+  createdAt DateTime @default(now())
+}
+
+model RateLimit {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String
+  window    String   // e.g. "DAILY"
+  count     Int      @default(0)
+  resetAt   DateTime
+  @@index([userId, key])
+}
