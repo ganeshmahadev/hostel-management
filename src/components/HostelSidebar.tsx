@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { Building, Calendar, History, MapPin } from "lucide-react";
+import { Building, Calendar, History, MapPin, Home } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -32,7 +32,7 @@ export function HostelSidebar({
       label: "Dashboard",
       href: "#",
       icon: (
-        <Building className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        <Home className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
       onClick: () => onViewChange?.("dashboard"),
       active: activeView === "dashboard",
@@ -127,22 +127,33 @@ export function HostelSidebar({
             </motion.div>
 
             <div className="flex items-center gap-2 -mt-2">
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: "h-8 w-8",
-                  },
-                }}
-              />
-              <motion.span
-                animate={{
-                  display: open ? "inline-block" : "none",
-                  opacity: open ? 1 : 0,
-                }}
-                className="text-sm text-neutral-700 dark:text-neutral-200"
-              >
-                Profile
-              </motion.span>
+              <div className="flex items-center gap-2 cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-md p-1 -m-1 transition-colors">
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "h-8 w-8",
+                    },
+                  }}
+                />
+                <motion.span
+                  animate={{
+                    display: open ? "inline-block" : "none",
+                    opacity: open ? 1 : 0,
+                  }}
+                  className="text-sm text-neutral-700 dark:text-neutral-200 cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Find and click the UserButton
+                    const userButton = document.querySelector('[data-clerk-user-button]') as HTMLElement;
+                    if (userButton) {
+                      userButton.click();
+                    }
+                  }}
+                >
+                  {user?.fullName || user?.firstName || user?.username || 'Profile'}
+                </motion.span>
+              </div>
             </div>
           </div>
         </SidebarBody>

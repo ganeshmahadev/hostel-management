@@ -228,13 +228,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t py-8 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 Hostel Management System. Built for accountability and fairness.</p>
-        </div>
-      </footer>
     </div>
   );
 }

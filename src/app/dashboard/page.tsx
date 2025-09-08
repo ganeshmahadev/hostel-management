@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import AvailabilityGrid from '@/components/AvailabilityGrid';
@@ -80,6 +79,9 @@ export default function HostelManagement() {
   } | null>(null);
   const [editBookingSheetOpen, setEditBookingSheetOpen] = useState(false);
   const [selectedBookingForEdit, setSelectedBookingForEdit] = useState<Booking | null>(null);
+  const [selectedHostelId, setSelectedHostelId] = useState<number | null>(null);
+  const [selectedHostelCode, setSelectedHostelCode] = useState<string | null>(null);
+  const [previousView, setPreviousView] = useState<ActiveView>('dashboard');
 
   useEffect(() => {
     if (isSignedIn && selectedDate) {
@@ -164,24 +166,34 @@ export default function HostelManagement() {
     // The MyBookingsSection component will automatically refresh via its own state management
   };
 
-  const getAvailabilityBadgeVariant = (percentage: number) => {
-    if (percentage >= 70) return 'default';
-    if (percentage >= 40) return 'secondary';
-    return 'destructive';
+  const handleViewChange = (newView: ActiveView) => {
+    setPreviousView(activeView);
+    setActiveView(newView);
   };
 
-  const getAvailabilityStatus = (percentage: number) => {
-    if (percentage >= 70) return 'High';
-    if (percentage >= 40) return 'Medium';
-    return 'Low';
+  const handleHostelSelection = (hostelId: number) => {
+    const hostel = hostelsData.find(h => h.id === hostelId);
+    if (hostel) {
+      setSelectedHostelId(hostelId);
+      setSelectedHostelCode(hostel.code);
+      setPreviousView(activeView);
+      setActiveView('rooms');
+    }
   };
+
+  const handleBackToPrevious = () => {
+    setActiveView(previousView);
+    setSelectedHostelId(null);
+    setSelectedHostelCode(null);
+  };
+
 
   return (
     <HostelSidebar
       selectedDate={selectedDate}
       onDateChange={setSelectedDate}
       activeView={activeView}
-      onViewChange={setActiveView}
+      onViewChange={handleViewChange}
     >
       <div className="min-h-screen bg-background">
         <main className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -219,15 +231,7 @@ export default function HostelManagement() {
                 {hostelsData.map((hostel) => (
                   <Card key={hostel.id} className="relative overflow-hidden">
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{hostel.name}</CardTitle>
-                        <Badge 
-                          variant={getAvailabilityBadgeVariant(hostel.availabilityPercentage)}
-                          className="text-xs"
-                        >
-                          {getAvailabilityStatus(hostel.availabilityPercentage)}
-                        </Badge>
-                      </div>
+                      <CardTitle className="text-lg">{hostel.name}</CardTitle>
                       <CardDescription className="flex items-center gap-2">
                         <MapPin className="h-3 w-3" />
                         {hostel.code} • {hostel.activeRooms} active room{hostel.activeRooms !== 1 ? 's' : ''}
@@ -279,7 +283,7 @@ export default function HostelManagement() {
                       <Button 
                         className="w-full" 
                         size="sm"
-                        onClick={() => setActiveView('rooms')}
+                        onClick={() => handleHostelSelection(hostel.id)}
                       >
                         View Availability Grid
                       </Button>
@@ -338,11 +342,31 @@ export default function HostelManagement() {
 
         {activeView === 'rooms' && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight">Availability Grid</h2>
-              <p className="text-muted-foreground">
-                Select time slots to book study rooms for {selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'selected date'}
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Availability Grid</h2>
+                <p className="text-muted-foreground">
+                  {selectedHostelId ? (
+                    <>
+                      {hostelsData.find(h => h.id === selectedHostelId)?.name} - Select time slots to book study rooms for {selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'selected date'}
+                    </>
+                  ) : (
+                    <>
+                      Select time slots to book study rooms for {selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'selected date'}
+                    </>
+                  )}
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={handleBackToPrevious}
+                className="flex items-center gap-2"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to {previousView === 'dashboard' ? 'Dashboard' : previousView === 'mybookings' ? 'My Bookings' : 'Previous'}
+              </Button>
             </div>
             
             {selectedDate && (
@@ -350,6 +374,7 @@ export default function HostelManagement() {
                 date={selectedDate}
                 onSlotSelect={handleSlotSelect}
                 userId={user?.id || "temp-user"}
+                hostelCode={selectedHostelCode}
               />
             )}
           </div>
@@ -387,46 +412,6 @@ export default function HostelManagement() {
           onBookingUpdated={handleBookingUpdated}
         />
         </main>
-
-        <footer className="border-t mt-16">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="grid gap-8 md:grid-cols-3">
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Building className="h-5 w-5 text-primary" />
-                  <span className="font-semibold">Hostel Management MVP</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Real-time room booking with 30-minute slot precision and built-in accountability.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold mb-3">Features</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• 30-minute time slots</li>
-                  <li>• 2-hour maximum booking</li>
-                  <li>• 24/7 availability</li>
-                  <li>• Real-time availability</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold mb-3">Guidelines</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Check-in within 10 minutes</li>
-                  <li>• Clean room after use</li>
-                  <li>• Report damages immediately</li>
-                  <li>• Maximum 2 bookings per day</li>
-                </ul>
-              </div>
-            </div>
-            
-            <div className="border-t pt-8 mt-8 text-center text-sm text-muted-foreground">
-              <p>&copy; 2025 Hostel Management System MVP. Following the complete system design architecture.</p>
-            </div>
-          </div>
-        </footer>
       </div>
     </HostelSidebar>
   );

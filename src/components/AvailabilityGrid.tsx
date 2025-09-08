@@ -41,13 +41,15 @@ interface AvailabilityGridProps {
   date: Date
   onSlotSelect?: (roomId: number, startSlot: TimeSlot, endSlot?: TimeSlot) => void
   userId?: string
+  hostelCode?: string | null
 }
 
 export default function AvailabilityGrid({ 
   roomId, 
   date, 
   onSlotSelect, 
-  userId 
+  userId,
+  hostelCode
 }: AvailabilityGridProps) {
   const [roomsData, setRoomsData] = useState<RoomAvailability[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,7 +58,7 @@ export default function AvailabilityGrid({
 
   useEffect(() => {
     fetchRoomAvailability()
-  }, [roomId, date, userId]) // fetchRoomAvailability is stable
+  }, [roomId, date, userId, hostelCode]) // fetchRoomAvailability is stable
 
   const fetchRoomAvailability = async () => {
     try {
@@ -67,6 +69,7 @@ export default function AvailabilityGrid({
       
       if (userId) params.set('userId', userId)
       if (roomId) params.set('roomId', roomId.toString())
+      if (hostelCode) params.set('hostel', hostelCode)
 
       const response = await fetch(`/api/rooms?${params}`)
       const data = await response.json()
@@ -207,6 +210,11 @@ export default function AvailabilityGrid({
   if (loading) {
     return (
       <div className="space-y-6">
+        <div className="text-center py-4">
+          <div className="text-sm text-muted-foreground">
+            {hostelCode ? `Loading rooms for hostel ${hostelCode}...` : 'Loading room availability...'}
+          </div>
+        </div>
         {[1, 2, 3].map((i) => (
           <Card key={i}>
             <CardHeader>
