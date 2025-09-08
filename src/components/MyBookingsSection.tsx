@@ -124,9 +124,7 @@ export default function MyBookingsSection({ onEditBooking }: MyBookingsSectionPr
           bookingId: selectedBookingForDamage?.id.toString(),
           roomId: selectedBookingForDamage?.room.id.toString(),
           reporterId: user?.id,
-          description: reportData.damageDescription,
-          severity: reportData.severity,
-          estimatedCost: reportData.estimatedCost,
+          description: reportData.description,
           photos: reportData.photos || []
         }),
       })
