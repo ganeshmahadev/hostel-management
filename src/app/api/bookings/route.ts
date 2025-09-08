@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, clerkClient } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
 import { db } from '@/lib/db'
 import { checkUserBookingLimits, validateBookingSlots } from '@/lib/availability'
 import { z } from 'zod'

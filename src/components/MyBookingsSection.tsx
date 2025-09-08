@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { 
@@ -197,7 +197,7 @@ export default function MyBookingsSection({ onEditBooking }: MyBookingsSectionPr
   }
 
   const groupBookingsByDate = (bookings: Booking[]) => {
-    const groups: { [key: string]: Booking[] } = {
+    const groups: Record<string, Booking[]> = {
       today: [],
       tomorrow: [],
       thisWeek: [],
@@ -394,7 +394,7 @@ export default function MyBookingsSection({ onEditBooking }: MyBookingsSectionPr
             <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Bookings Yet</h3>
             <p className="text-muted-foreground text-center">
-              You haven't made any room bookings. Go to the Availability tab to book your first study room!
+              You haven&apos;t made any room bookings. Go to the Availability tab to book your first study room!
             </p>
           </CardContent>
         </Card>

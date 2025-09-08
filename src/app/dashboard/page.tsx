@@ -9,9 +9,9 @@ import BookingSheet from '@/components/BookingSheet';
 import MyBookingsSection from '@/components/MyBookingsSection';
 import EditBookingSheet from '@/components/EditBookingSheet';
 import { HostelSidebar } from '@/components/HostelSidebar';
-import { Building, Calendar, Users, MapPin, LogOut, User, History } from 'lucide-react';
-import { format, addDays } from 'date-fns';
-import { useUser, SignOutButton, UserButton } from '@clerk/nextjs';
+import { Building, Users, MapPin } from 'lucide-react';
+import { format } from 'date-fns';
+import { useUser } from '@clerk/nextjs';
 import { formatDateForAPI } from '@/lib/utils';
 
 interface TimeSlot {

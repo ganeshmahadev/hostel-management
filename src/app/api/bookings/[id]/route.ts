@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { db } from '@/lib/db'
 import { validateBookingSlots, validateBookingModificationTiming, validateModifiedBookingLimits } from '@/lib/availability'
 import { z } from 'zod'
-import { isBefore, addMinutes } from 'date-fns'
+// import { isBefore, addMinutes } from 'date-fns'
 
 const updateBookingSchema = z.object({
   startTime: z.string().datetime().optional(),

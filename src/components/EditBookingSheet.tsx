@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Clock, Users, MapPin, AlertTriangle, User, RefreshCw } from 'lucide-react'
-import { format, parse } from 'date-fns'
+import { Calendar, Clock, MapPin, AlertTriangle, User, RefreshCw } from 'lucide-react'
+import { format } from 'date-fns'
 import { z } from 'zod'
 import { useUser } from '@clerk/nextjs'
 
@@ -123,7 +123,7 @@ export default function EditBookingSheet({
         }
       }
 
-      const dataToValidate: any = {}
+      const dataToValidate: Record<string, unknown> = {}
       
       // Only validate fields that have been changed or are required
       if (formData.purpose) {
@@ -183,7 +183,7 @@ export default function EditBookingSheet({
     setIsSubmitting(true)
     
     try {
-      const updateData: any = {}
+      const updateData: Record<string, unknown> = {}
       
       // Only include changed fields
       const originalStartTime = format(new Date(booking.startTime), 'HH:mm')

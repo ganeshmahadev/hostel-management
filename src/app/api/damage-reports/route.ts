@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const reporterId = searchParams.get('reporterId')
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     
     if (roomId) where.roomId = parseInt(roomId)
     if (status) where.status = status.toUpperCase()

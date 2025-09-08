@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { AlertTriangle, Upload } from 'lucide-react';
-import { DamageReport, Booking } from '@/types';
+import { Booking } from '@/types';
 
 interface DamageReportFormProps {
   isOpen: boolean;
