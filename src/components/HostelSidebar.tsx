@@ -5,24 +5,24 @@ import { Building, Calendar, History, MapPin } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { DatePicker } from '@/components/DatePicker';
-import { Badge } from '@/components/ui/badge';
-import { UserButton, useUser } from '@clerk/nextjs';
+import { DatePicker } from "@/components/DatePicker";
+import { Badge } from "@/components/ui/badge";
+import { UserButton, useUser } from "@clerk/nextjs";
 
 interface HostelSidebarProps {
   children: React.ReactNode;
   selectedDate?: Date;
   onDateChange?: (date: Date | undefined) => void;
   activeView?: string;
-  onViewChange?: (view: 'dashboard' | 'rooms' | 'mybookings') => void;
+  onViewChange?: (view: "dashboard" | "rooms" | "mybookings") => void;
 }
 
-export function HostelSidebar({ 
-  children, 
-  selectedDate, 
-  onDateChange, 
-  activeView = 'dashboard',
-  onViewChange 
+export function HostelSidebar({
+  children,
+  selectedDate,
+  onDateChange,
+  activeView = "dashboard",
+  onViewChange,
 }: HostelSidebarProps) {
   const { user } = useUser();
   const [open, setOpen] = useState(false);
@@ -34,8 +34,8 @@ export function HostelSidebar({
       icon: (
         <Building className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
-      onClick: () => onViewChange?.('dashboard'),
-      active: activeView === 'dashboard'
+      onClick: () => onViewChange?.("dashboard"),
+      active: activeView === "dashboard",
     },
     {
       label: "Availability Grid",
@@ -43,8 +43,8 @@ export function HostelSidebar({
       icon: (
         <Calendar className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
-      onClick: () => onViewChange?.('rooms'),
-      active: activeView === 'rooms'
+      onClick: () => onViewChange?.("rooms"),
+      active: activeView === "rooms",
     },
     {
       label: "My Bookings",
@@ -52,8 +52,8 @@ export function HostelSidebar({
       icon: (
         <History className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
-      onClick: () => onViewChange?.('mybookings'),
-      active: activeView === 'mybookings'
+      onClick: () => onViewChange?.("mybookings"),
+      active: activeView === "mybookings",
     },
   ];
 
@@ -63,30 +63,26 @@ export function HostelSidebar({
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
             {open ? <Logo /> : <LogoIcon />}
-            
+
             {/* Date Picker - only show when sidebar is open */}
-            <motion.div
-              animate={{
-                display: open ? "block" : "none",
-                opacity: open ? 1 : 0,
-              }}
-              className="mt-4"
-            >
-              <div className="mb-4">
-                <DatePicker
-                  date={selectedDate}
-                  onDateChange={onDateChange}
-                  placeholder="Select date"
-                />
+            {open && (
+              <div className="mt-4">
+                <div className="mb-4">
+                  <DatePicker
+                    date={selectedDate}
+                    onDateChange={onDateChange || (() => {})}
+                    placeholder="Select date"
+                  />
+                </div>
+                <div className="flex items-center gap-2 mb-6">
+                  <Badge variant="outline" className="text-xs text-white">
+                    <MapPin className="h-3 w-3" />
+                    H1-H7
+                  </Badge>
+                </div>
               </div>
-              <div className="flex items-center gap-2 mb-6">
-                <Badge variant="outline" className="text-xs">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  H1-H7
-                </Badge>
-              </div>
-            </motion.div>
-            
+            )}
+
             <div className="mt-8 flex flex-col gap-2">
               {links.map((link, idx) => (
                 <div
@@ -97,18 +93,18 @@ export function HostelSidebar({
                     link.active && "bg-neutral-200 dark:bg-neutral-700"
                   )}
                 >
-                  <SidebarLink 
+                  <SidebarLink
                     link={{
                       label: link.label,
                       href: link.href,
-                      icon: link.icon
-                    }} 
+                      icon: link.icon,
+                    }}
                   />
                 </div>
               ))}
             </div>
           </div>
-          
+
           {/* User Profile */}
           <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
             <motion.div
@@ -129,13 +125,13 @@ export function HostelSidebar({
                 </div>
               )}
             </motion.div>
-            
+
             <div className="flex items-center gap-2 -mt-2">
-              <UserButton 
+              <UserButton
                 appearance={{
                   elements: {
-                    avatarBox: "h-8 w-8"
-                  }
+                    avatarBox: "h-8 w-8",
+                  },
                 }}
               />
               <motion.span
@@ -151,12 +147,10 @@ export function HostelSidebar({
           </div>
         </SidebarBody>
       </Sidebar>
-      
+
       {/* Main Content */}
       <div className="flex flex-1">
-        <div className="flex-1 w-full h-full overflow-auto">
-          {children}
-        </div>
+        <div className="flex-1 w-full h-full overflow-auto">{children}</div>
       </div>
     </div>
   );
