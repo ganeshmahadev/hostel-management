@@ -9,9 +9,7 @@ export async function POST(request: NextRequest) {
       roomId, 
       reporterId, 
       description, 
-      photos = [], 
-      severity = 'MEDIUM',
-      estimatedCost 
+      photos = []
     } = body
 
     // Validate required fields
@@ -30,8 +28,6 @@ export async function POST(request: NextRequest) {
         reporterId,
         description,
         photos,
-        severity: severity.toUpperCase(),
-        estimatedCost: estimatedCost ? parseInt(estimatedCost) : null,
         status: 'REPORTED'
       },
       include: {

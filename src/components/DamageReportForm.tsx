@@ -14,7 +14,13 @@ interface DamageReportFormProps {
   isOpen: boolean;
   onClose: () => void;
   booking?: Booking;
-  onDamageReportSubmit?: (report: Omit<DamageReport, 'id' | 'createdAt' | 'resolvedAt'>) => void;
+  onDamageReportSubmit?: (report: {
+    bookingId: string;
+    roomId: string;
+    reporterId: string;
+    description: string;
+    photos: string[];
+  }) => void;
 }
 
 export default function DamageReportForm({ 
@@ -25,17 +31,12 @@ export default function DamageReportForm({
 }: DamageReportFormProps) {
   const [formData, setFormData] = useState({
     damageDescription: '',
-    severity: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH',
     reportedBy: booking?.studentName || '',
-    estimatedCost: '',
   });
   const [photos, setPhotos] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSeverityChange = (severity: 'LOW' | 'MEDIUM' | 'HIGH') => {
-    setFormData(prev => ({ ...prev, severity }));
-  };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -66,9 +67,6 @@ export default function DamageReportForm({
       newErrors.reportedBy = 'Reporter name is required';
     }
 
-    if (formData.estimatedCost && isNaN(Number(formData.estimatedCost))) {
-      newErrors.estimatedCost = 'Please enter a valid amount';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -82,15 +80,12 @@ export default function DamageReportForm({
     setIsSubmitting(true);
 
     try {
-      const reportData: Omit<DamageReport, 'id' | 'createdAt' | 'resolvedAt'> = {
+      const reportData = {
         bookingId: booking.id,
         roomId: booking.roomId,
-        reportedBy: formData.reportedBy.trim(),
-        damageDescription: formData.damageDescription.trim(),
-        severity: formData.severity,
-        photos: photos.map(photo => URL.createObjectURL(photo)),
-        status: 'REPORTED',
-        estimatedCost: formData.estimatedCost ? Number(formData.estimatedCost) : undefined,
+        reporterId: booking.studentId, // Use the actual user ID from the booking
+        description: formData.damageDescription.trim(),
+        photos: photos.map(photo => URL.createObjectURL(photo)), // In production, upload to S3
       };
 
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -99,9 +94,7 @@ export default function DamageReportForm({
       
       setFormData({
         damageDescription: '',
-        severity: 'MEDIUM',
         reportedBy: booking?.studentName || '',
-        estimatedCost: '',
       });
       setPhotos([]);
       setErrors({});
@@ -120,14 +113,6 @@ export default function DamageReportForm({
     }
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'LOW': return 'bg-muted/50 text-foreground border-border';
-      case 'MEDIUM': return 'bg-muted text-foreground border-border';
-      case 'HIGH': return 'bg-destructive text-destructive-foreground border-destructive';
-      default: return 'bg-muted/50 text-muted-foreground border-border';
-    }
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -157,26 +142,6 @@ export default function DamageReportForm({
             )}
           </div>
 
-          <div className="space-y-3">
-            <Label>Damage Severity</Label>
-            <div className="flex gap-2">
-              {(['LOW', 'MEDIUM', 'HIGH'] as const).map((severity) => (
-                <Button
-                  key={severity}
-                  type="button"
-                  variant={formData.severity === severity ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleSeverityChange(severity)}
-                  className={formData.severity === severity ? getSeverityColor(severity) : ''}
-                >
-                  {severity}
-                </Button>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              LOW: Minor issues (scratches, stains) | MEDIUM: Moderate damage (broken chair, damaged wall) | HIGH: Major damage (broken furniture, electrical issues)
-            </p>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="damageDescription">Damage Description</Label>
@@ -196,23 +161,6 @@ export default function DamageReportForm({
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="estimatedCost">Estimated Repair Cost (Optional)</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-muted-foreground">₹</span>
-              <Input
-                id="estimatedCost"
-                type="number"
-                placeholder="0"
-                className="pl-8"
-                value={formData.estimatedCost}
-                onChange={(e) => handleInputChange('estimatedCost', e.target.value)}
-              />
-            </div>
-            {errors.estimatedCost && (
-              <p className="text-sm text-destructive">{errors.estimatedCost}</p>
-            )}
-          </div>
 
           <div className="space-y-3">
             <Label>Photos (Optional)</Label>
