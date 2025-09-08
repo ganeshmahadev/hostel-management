@@ -463,6 +463,7 @@ export default function MyBookingsSection({ onEditBooking }: MyBookingsSectionPr
         booking={selectedBookingForDamage ? {
           id: selectedBookingForDamage.id.toString(),
           roomId: selectedBookingForDamage.room.id.toString(),
+          studentId: user?.id || '',
           studentName: user?.fullName || user?.firstName || 'User',
           studentEmail: user?.primaryEmailAddress?.emailAddress || '',
           studentPhone: '',
