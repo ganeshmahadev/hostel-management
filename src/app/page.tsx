@@ -71,12 +71,12 @@ export default function LandingPage() {
               Smart Room Management
             </Badge>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-              Book Study Rooms with{' '}
+              Book Common Rooms with{' '}
               <span className="text-primary">Accountability</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Real-time room availability, 15-minute precision booking, and built-in damage reporting 
-              for hostel common rooms across H1-H7.
+              Real-time room availability, 30-minute slot precision booking, and built-in accountability 
+              for study rooms across H1-H7 hostels.
             </p>
           </div>
           
@@ -99,7 +99,7 @@ export default function LandingPage() {
               <div className="text-sm text-muted-foreground">Hostels</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">15min</div>
+              <div className="text-3xl font-bold text-primary">30min</div>
               <div className="text-sm text-muted-foreground">Slot Precision</div>
             </div>
             <div className="text-center">
@@ -130,7 +130,7 @@ export default function LandingPage() {
                 <Calendar className="h-8 w-8 text-primary" />
                 <CardTitle>Real-time Availability</CardTitle>
                 <CardDescription>
-                  See live slot availability across all hostels with 15-minute precision
+                  See live slot availability across all hostels with 30-minute precision
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -156,14 +156,14 @@ export default function LandingPage() {
                 <Shield className="h-8 w-8 text-primary" />
                 <CardTitle>Built-in Accountability</CardTitle>
                 <CardDescription>
-                  QR-based check-in/out and damage reporting system
+                  Check-in requirements and damage reporting system
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    QR code check-in
+                    10-minute check-in window
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
@@ -171,7 +171,7 @@ export default function LandingPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Usage tracking
+                    Booking history tracking
                   </li>
                 </ul>
               </CardContent>
@@ -182,22 +182,22 @@ export default function LandingPage() {
                 <Clock className="h-8 w-8 text-primary" />
                 <CardTitle>Fair Usage Limits</CardTitle>
                 <CardDescription>
-                  Balanced booking system with daily and weekly limits
+                  Balanced booking system with daily limits and maximum duration
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    2 bookings per day
+                    2 bookings per day maximum
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    6 hours per week
+                    2 hours maximum per booking
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Fair scoring system
+                    Fair access for all students
                   </li>
                 </ul>
               </CardContent>
@@ -211,7 +211,7 @@ export default function LandingPage() {
         <div className="container mx-auto text-center space-y-8 max-w-3xl">
           <h2 className="text-3xl font-bold">Ready to Get Started?</h2>
           <p className="text-lg text-muted-foreground">
-            Join students across H1-H7 hostels who are already using our smart booking system.
+            Join students across H1-H7 hostels who are already using our smart study room booking system.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <SignUpButton mode="modal">

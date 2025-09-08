@@ -14,10 +14,12 @@ import {
   X, 
   CheckCircle,
   AlertCircle,
-  History
+  History,
+  AlertTriangle
 } from 'lucide-react'
 import { format, isToday, isTomorrow, isPast, isThisWeek } from 'date-fns'
 import { useUser } from '@clerk/nextjs'
+import DamageReportForm from './DamageReportForm'
 
 interface Booking {
   id: number
@@ -47,6 +49,8 @@ export default function MyBookingsSection({ onEditBooking }: MyBookingsSectionPr
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [damageReportOpen, setDamageReportOpen] = useState(false)
+  const [selectedBookingForDamage, setSelectedBookingForDamage] = useState<Booking | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -98,6 +102,42 @@ export default function MyBookingsSection({ onEditBooking }: MyBookingsSectionPr
     }
   }
 
+  const handleReportDamage = (booking: Booking) => {
+    setSelectedBookingForDamage(booking)
+    setDamageReportOpen(true)
+  }
+
+  const handleDamageReportSubmit = async (reportData: any) => {
+    try {
+      const response = await fetch('/api/damage-reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId: selectedBookingForDamage?.id.toString(),
+          roomId: selectedBookingForDamage?.room.id.toString(),
+          reporterId: user?.id,
+          description: reportData.damageDescription,
+          severity: reportData.severity,
+          estimatedCost: reportData.estimatedCost,
+          photos: reportData.photos || []
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit damage report')
+      }
+
+      setDamageReportOpen(false)
+      setSelectedBookingForDamage(null)
+      alert('Damage report submitted successfully!')
+    } catch (error) {
+      console.error('Error submitting damage report:', error)
+      alert('Failed to submit damage report. Please try again.')
+    }
+  }
+
   const getBookingStatusIcon = (status: string) => {
     switch (status) {
       case 'CONFIRMED':
@@ -145,13 +185,15 @@ export default function MyBookingsSection({ onEditBooking }: MyBookingsSectionPr
   }
 
   const canModifyBooking = (booking: Booking) => {
+    if (booking.status !== 'CONFIRMED') {
+      return false
+    }
+    
     const startTime = new Date(booking.startTime)
     const now = new Date()
-    const timeDiff = startTime.getTime() - now.getTime()
-    const minutesUntilBooking = timeDiff / (1000 * 60)
     
-    // Can only modify if booking is confirmed, hasn't started, and is at least 15 minutes away
-    return booking.status === 'CONFIRMED' && minutesUntilBooking > 15
+    // Can modify if booking is confirmed and hasn't started yet
+    return startTime > now
   }
 
   const groupBookingsByDate = (bookings: Booking[]) => {
@@ -257,11 +299,22 @@ export default function MyBookingsSection({ onEditBooking }: MyBookingsSectionPr
               </>
             ) : (
               booking.status === 'CONFIRMED' && (
-                <div className="text-xs text-muted-foreground italic">
-                  {isPast(new Date(booking.startTime)) 
-                    ? 'Cannot modify past bookings' 
-                    : 'Can only modify 15+ minutes before start time'
-                  }
+                <div className="flex items-center gap-2">
+                  {isPast(new Date(booking.startTime)) ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleReportDamage(booking)}
+                      className="flex items-center gap-1 text-orange-600 hover:text-orange-700"
+                    >
+                      <AlertTriangle className="h-3 w-3" />
+                      Report Damage
+                    </Button>
+                  ) : (
+                    <div className="text-xs text-muted-foreground italic">
+                      Booking has started or completed
+                    </div>
+                  )}
                 </div>
               )
             )}
@@ -396,6 +449,32 @@ export default function MyBookingsSection({ onEditBooking }: MyBookingsSectionPr
         groupedBookings.past, 
         <History className="h-4 w-4 text-muted-foreground" />
       )}
+
+      <DamageReportForm
+        isOpen={damageReportOpen}
+        onClose={() => {
+          setDamageReportOpen(false)
+          setSelectedBookingForDamage(null)
+        }}
+        booking={selectedBookingForDamage ? {
+          id: selectedBookingForDamage.id.toString(),
+          roomId: selectedBookingForDamage.room.id.toString(),
+          studentName: user?.fullName || user?.firstName || 'User',
+          studentEmail: user?.primaryEmailAddress?.emailAddress || '',
+          studentPhone: '',
+          timeSlot: {
+            id: '',
+            startTime: selectedBookingForDamage.startTime,
+            endTime: selectedBookingForDamage.endTime,
+            date: selectedBookingForDamage.startTime.split('T')[0]
+          },
+          purpose: selectedBookingForDamage.purpose || '',
+          status: selectedBookingForDamage.status,
+          createdAt: new Date(selectedBookingForDamage.createdAt),
+          updatedAt: new Date(selectedBookingForDamage.updatedAt || selectedBookingForDamage.createdAt)
+        } : undefined}
+        onDamageReportSubmit={handleDamageReportSubmit}
+      />
     </div>
   )
 }
