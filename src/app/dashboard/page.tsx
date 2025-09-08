@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import AvailabilityGrid from '@/components/AvailabilityGrid';
 import BookingSheet from '@/components/BookingSheet';
-import { DatePicker } from '@/components/DatePicker';
-import { Building, Calendar, Users, MapPin, LogOut, User } from 'lucide-react';
+import MyBookingsSection from '@/components/MyBookingsSection';
+import EditBookingSheet from '@/components/EditBookingSheet';
+import { HostelSidebar } from '@/components/HostelSidebar';
+import { Building, Calendar, Users, MapPin, LogOut, User, History } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { useUser, SignOutButton, UserButton } from '@clerk/nextjs';
 import { formatDateForAPI } from '@/lib/utils';
@@ -40,7 +42,26 @@ interface HostelData {
   }>
 }
 
-type ActiveView = 'dashboard' | 'rooms' | 'bookings';
+interface Booking {
+  id: number
+  startTime: string
+  endTime: string
+  status: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
+  purpose: string | null
+  partySize: number
+  room: {
+    id: number
+    name: string
+    hostel: {
+      name: string
+      code: string
+    }
+  }
+  createdAt: string
+  updatedAt?: string
+}
+
+type ActiveView = 'dashboard' | 'rooms' | 'mybookings';
 
 export default function HostelManagement() {
   const { user, isSignedIn, isLoaded } = useUser();
@@ -57,6 +78,8 @@ export default function HostelManagement() {
     startSlot: TimeSlot;
     endSlot: TimeSlot;
   } | null>(null);
+  const [editBookingSheetOpen, setEditBookingSheetOpen] = useState(false);
+  const [selectedBookingForEdit, setSelectedBookingForEdit] = useState<Booking | null>(null);
 
   useEffect(() => {
     if (isSignedIn && selectedDate) {
@@ -129,6 +152,18 @@ export default function HostelManagement() {
     fetchHostelsData();
   };
 
+  const handleEditBooking = (booking: Booking) => {
+    setSelectedBookingForEdit(booking);
+    setEditBookingSheetOpen(true);
+  };
+
+  const handleBookingUpdated = (updatedBooking: Booking) => {
+    console.log('Booking updated:', updatedBooking);
+    // Refresh data after booking modification
+    fetchHostelsData();
+    // The MyBookingsSection component will automatically refresh via its own state management
+  };
+
   const getAvailabilityBadgeVariant = (percentage: number) => {
     if (percentage >= 70) return 'default';
     if (percentage >= 40) return 'secondary';
@@ -142,86 +177,14 @@ export default function HostelManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Building className="h-8 w-8 text-primary" />
-                <div>
-                  <h1 className="text-xl font-bold">Hostel Management</h1>
-                  <p className="text-xs text-muted-foreground">Room Booking System</p>
-                </div>
-              </div>
-            </div>
-            
-            <nav className="hidden md:flex items-center space-x-1">
-              <Button
-                variant={activeView === 'dashboard' ? 'default' : 'ghost'}
-                className="flex items-center gap-2"
-                onClick={() => setActiveView('dashboard')}
-              >
-                <Building className="h-4 w-4" />
-                Dashboard
-              </Button>
-              <Button
-                variant={activeView === 'rooms' ? 'default' : 'ghost'}
-                className="flex items-center gap-2"
-                onClick={() => setActiveView('rooms')}
-              >
-                <Calendar className="h-4 w-4" />
-                Availability Grid
-              </Button>
-            </nav>
-
-            <div className="flex items-center gap-4">
-              <DatePicker
-                date={selectedDate}
-                onDateChange={setSelectedDate}
-                placeholder="Select date"
-              />
-              <Badge variant="outline" className="hidden sm:inline-flex">
-                H1-H7
-              </Badge>
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:block text-sm">
-                  <div className="font-medium">{user?.fullName || user?.firstName}</div>
-                  <div className="text-muted-foreground text-xs">{user?.primaryEmailAddress?.emailAddress}</div>
-                </div>
-                <UserButton 
-                  appearance={{
-                    elements: {
-                      avatarBox: "h-8 w-8"
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="md:hidden pb-3">
-            <nav className="flex space-x-1">
-              <Button
-                variant={activeView === 'dashboard' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setActiveView('dashboard')}
-              >
-                Dashboard
-              </Button>
-              <Button
-                variant={activeView === 'rooms' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setActiveView('rooms')}
-              >
-                Grid View
-              </Button>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <HostelSidebar
+      selectedDate={selectedDate}
+      onDateChange={setSelectedDate}
+      activeView={activeView}
+      onViewChange={setActiveView}
+    >
+      <div className="min-h-screen bg-background">
+        <main className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {activeView === 'dashboard' && (
           <div className="space-y-6">
             {/* Header */}
@@ -391,59 +354,80 @@ export default function HostelManagement() {
             )}
           </div>
         )}
-      </main>
 
-      <BookingSheet
-        isOpen={bookingSheetOpen}
-        onClose={() => setBookingSheetOpen(false)}
-        roomId={selectedBookingData?.roomId}
-        roomName={selectedBookingData?.roomName}
-        hostelName={selectedBookingData?.hostelName}
-        capacity={selectedBookingData?.capacity}
-        startSlot={selectedBookingData?.startSlot}
-        endSlot={selectedBookingData?.endSlot}
-        onBookingSubmit={handleBookingSubmit}
-      />
-
-      <footer className="border-t mt-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid gap-8 md:grid-cols-3">
+        {activeView === 'mybookings' && (
+          <div className="space-y-6">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Building className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Hostel Management MVP</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Real-time room booking with 15-minute slot precision and built-in accountability.
+              <h2 className="text-2xl font-bold tracking-tight">My Bookings</h2>
+              <p className="text-muted-foreground">
+                View and manage all your room bookings
               </p>
             </div>
             
-            <div>
-              <h3 className="font-semibold mb-3">Features</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• 15-minute time slots</li>
-                <li>• 2-hour maximum booking</li>
-                <li>• Real-time availability</li>
-                <li>• QR-based check-in</li>
-              </ul>
+            <MyBookingsSection onEditBooking={handleEditBooking} />
+          </div>
+        )}
+
+        <BookingSheet
+          isOpen={bookingSheetOpen}
+          onClose={() => setBookingSheetOpen(false)}
+          roomId={selectedBookingData?.roomId}
+          roomName={selectedBookingData?.roomName}
+          hostelName={selectedBookingData?.hostelName}
+          capacity={selectedBookingData?.capacity}
+          startSlot={selectedBookingData?.startSlot}
+          endSlot={selectedBookingData?.endSlot}
+          onBookingSubmit={handleBookingSubmit}
+        />
+
+        <EditBookingSheet
+          isOpen={editBookingSheetOpen}
+          onClose={() => setEditBookingSheetOpen(false)}
+          booking={selectedBookingForEdit}
+          onBookingUpdated={handleBookingUpdated}
+        />
+        </main>
+
+        <footer className="border-t mt-16">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="grid gap-8 md:grid-cols-3">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Building className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">Hostel Management MVP</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Real-time room booking with 30-minute slot precision and built-in accountability.
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold mb-3">Features</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>• 30-minute time slots</li>
+                  <li>• 2-hour maximum booking</li>
+                  <li>• 24/7 availability</li>
+                  <li>• Real-time availability</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold mb-3">Guidelines</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>• Check-in within 10 minutes</li>
+                  <li>• Clean room after use</li>
+                  <li>• Report damages immediately</li>
+                  <li>• Maximum 2 bookings per day</li>
+                </ul>
+              </div>
             </div>
             
-            <div>
-              <h3 className="font-semibold mb-3">Guidelines</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• Check-in within 10 minutes</li>
-                <li>• Clean room after use</li>
-                <li>• Report damages immediately</li>
-                <li>• Maximum 2 bookings per day</li>
-              </ul>
+            <div className="border-t pt-8 mt-8 text-center text-sm text-muted-foreground">
+              <p>&copy; 2025 Hostel Management System MVP. Following the complete system design architecture.</p>
             </div>
           </div>
-          
-          <div className="border-t pt-8 mt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 Hostel Management System MVP. Following the complete system design architecture.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </HostelSidebar>
   );
 }

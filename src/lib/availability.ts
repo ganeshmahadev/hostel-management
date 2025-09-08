@@ -34,26 +34,33 @@ export interface RoomAvailability {
 }
 
 /**
- * Generate time slots for a given date with 15-minute intervals
- * Operating hours: 8:00 AM to 10:00 PM (14 hours = 56 slots)
+ * Generate time slots for a given date with 30-minute intervals
+ * Operating hours: 24 hours (00:00 to 24:00)
  */
 export function generateTimeSlots(date: Date): TimeSlot[] {
   const slots: TimeSlot[] = []
-  const startHour = 8 // 8 AM
-  const endHour = 22 // 10 PM
+  const startHour = 0 // 12:00 AM (midnight)
+  const endHour = 24 // 12:00 AM next day (midnight)
   const dayStart = startOfDay(date)
+  const now = new Date()
   
   for (let hour = startHour; hour < endHour; hour++) {
     for (let minute = 0; minute < 60; minute += SLOT_MINUTES) {
       const startTime = addMinutes(dayStart, hour * 60 + minute)
       const endTime = addMinutes(startTime, SLOT_MINUTES)
       
+      // Only include slots that haven't passed yet (if it's today)
+      let isAvailable = true
+      if (isSameDay(date, now) && startTime <= now) {
+        isAvailable = false // Past slots are not available
+      }
+      
       slots.push({
         id: `${format(date, 'yyyy-MM-dd')}-${hour.toString().padStart(2, '0')}${minute.toString().padStart(2, '0')}`,
         startTime,
         endTime,
         date: format(date, 'yyyy-MM-dd'),
-        isAvailable: true
+        isAvailable
       })
     }
   }
@@ -111,12 +118,15 @@ export async function getRoomAvailability(roomId: number, date: Date, userId?: s
   })
 
   // Update slot availability
-  const updatedSlots = slots.map(slot => ({
-    ...slot,
-    isAvailable: !bookedSlots.has(slot.id),
-    isMyBooking: bookedSlots.get(slot.id)?.isMyBooking || false,
-    bookingId: bookedSlots.get(slot.id)?.bookingId
-  }))
+  const updatedSlots = slots.map(slot => {
+    const isBooked = bookedSlots.has(slot.id)
+    return {
+      ...slot,
+      isAvailable: slot.isAvailable && !isBooked, // Respect both time and booking constraints
+      isMyBooking: bookedSlots.get(slot.id)?.isMyBooking || false,
+      bookingId: bookedSlots.get(slot.id)?.bookingId
+    }
+  })
 
   const availableSlots = updatedSlots.filter(slot => slot.isAvailable).length
 
@@ -197,6 +207,73 @@ export function validateBookingSlots(startSlot: TimeSlot, endSlot: TimeSlot): {
   return {
     isValid: true,
     durationHours
+  }
+}
+
+/**
+ * Check if booking can be modified based on timing rules
+ */
+export function validateBookingModificationTiming(bookingStartTime: Date): {
+  canModify: boolean
+  error?: string
+} {
+  const now = new Date()
+  const timeDiff = bookingStartTime.getTime() - now.getTime()
+  const minutesUntilBooking = timeDiff / (1000 * 60)
+
+  // Cannot modify bookings that have already started
+  if (minutesUntilBooking <= 0) {
+    return {
+      canModify: false,
+      error: 'Cannot modify bookings that have already started or are in the past'
+    }
+  }
+
+  // Must modify at least 15 minutes before the booking starts
+  if (minutesUntilBooking < 15) {
+    return {
+      canModify: false,
+      error: 'Bookings can only be modified at least 15 minutes before the start time'
+    }
+  }
+
+  return {
+    canModify: true
+  }
+}
+
+/**
+ * Validate if the modified booking respects daily/weekly limits
+ */
+export async function validateModifiedBookingLimits(
+  userId: string, 
+  originalBooking: { startTime: Date, endTime: Date }, 
+  newStartTime: Date, 
+  newEndTime: Date
+): Promise<{
+  isValid: boolean
+  error?: string
+}> {
+  const originalDurationHours = (originalBooking.endTime.getTime() - originalBooking.startTime.getTime()) / (1000 * 60 * 60)
+  const newDurationHours = (newEndTime.getTime() - newStartTime.getTime()) / (1000 * 60 * 60)
+  
+  // If duration increased, check if user can book additional time
+  if (newDurationHours > originalDurationHours) {
+    const additionalHours = newDurationHours - originalDurationHours
+    
+    // Check if the new time still respects daily/weekly limits
+    const limitsCheck = await checkUserBookingLimits(userId, newStartTime)
+    
+    if (!limitsCheck.canBook && (limitsCheck.weeklyHours + additionalHours) > WEEKLY_HOURS_CAP) {
+      return {
+        isValid: false,
+        error: `Modified booking would exceed weekly hours limit (${WEEKLY_HOURS_CAP} hours per week)`
+      }
+    }
+  }
+
+  return {
+    isValid: true
   }
 }
 

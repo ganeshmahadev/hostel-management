@@ -102,6 +102,11 @@ export function DatePicker({
           classNames={{
             base: "bg-content1",
             content: "w-full",
+            cell: "[&[data-unavailable]]:relative [&[data-unavailable]]:after:content-['×'] [&[data-unavailable]]:after:absolute [&[data-unavailable]]:after:top-0 [&[data-unavailable]]:after:right-0 [&[data-unavailable]]:after:text-red-500 [&[data-unavailable]]:after:text-xs [&[data-unavailable]]:after:font-bold [&[data-unavailable]]:opacity-60",
+          }}
+          isDateUnavailable={(date) => {
+            // Mark past dates as unavailable to show crosses
+            return date.compare(todayDate) < 0
           }}
         />
         <div className="p-3 border-t text-xs text-muted-foreground bg-content1">

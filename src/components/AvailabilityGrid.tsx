@@ -91,13 +91,15 @@ export default function AvailabilityGrid({
     className: string
     disabled: boolean
   } => {
-    // Temporarily disable past slot restrictions for current day booking
-    const isPast = false
+    // Check if slot is in the past (only for today's date)
+    const now = new Date()
+    const slotStart = new Date(slot.startTime)
+    const isPast = isBefore(slotStart, now) && format(date, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd')
     
     if (selectedSlots.start?.id === slot.id || selectedSlots.end?.id === slot.id) {
       return {
         status: 'selected',
-        className: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        className: 'bg-purple-600 text-white border-purple-700 hover:bg-purple-700',
         disabled: false
       }
     }
@@ -114,20 +116,20 @@ export default function AvailabilityGrid({
       if (slot.isMyBooking) {
         return {
           status: 'mine',
-          className: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200',
+          className: 'bg-blue-500 text-white border-blue-600 hover:bg-blue-600',
           disabled: false
         }
       }
       return {
         status: 'busy',
-        className: 'bg-destructive/10 text-destructive border-destructive/20 cursor-not-allowed',
+        className: 'bg-red-500 text-white border-red-600 cursor-not-allowed hover:bg-red-600',
         disabled: true
       }
     }
 
     return {
       status: 'free',
-      className: 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100',
+      className: 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200',
       disabled: false
     }
   }
@@ -185,7 +187,7 @@ export default function AvailabilityGrid({
 
   const getTimeHeaders = () => {
     const headers = []
-    for (let hour = 8; hour < 22; hour++) {
+    for (let hour = 0; hour < 24; hour++) {
       headers.push(`${hour.toString().padStart(2, '0')}:00`)
     }
     return headers
@@ -212,8 +214,8 @@ export default function AvailabilityGrid({
               <Skeleton className="h-4 w-32" />
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-14 gap-1">
-                {Array.from({ length: 56 }, (_, i) => (
+              <div className="grid grid-cols-24 gap-1">
+                {Array.from({ length: 48 }, (_, i) => (
                   <Skeleton key={i} className="h-10 w-full" />
                 ))}
               </div>
@@ -274,7 +276,7 @@ export default function AvailabilityGrid({
             {/* Time headers */}
             <div className="grid grid-cols-[100px_1fr] gap-4">
               <div></div>
-              <div className="grid grid-cols-14 gap-1 text-xs text-muted-foreground">
+              <div className="grid grid-cols-24 gap-1 text-xs text-muted-foreground">
                 {getTimeHeaders().map((hour) => (
                   <div key={hour} className="text-center font-medium col-span-1 border-r border-muted pr-1">
                     {hour}
@@ -289,9 +291,9 @@ export default function AvailabilityGrid({
                 30min slots
               </div>
               
-              <div className="grid grid-cols-14 gap-1">
-                {Array.from({ length: 14 }, (_, hourIndex) => {
-                  const hour = 8 + hourIndex
+              <div className="grid grid-cols-24 gap-1">
+                {Array.from({ length: 24 }, (_, hourIndex) => {
+                  const hour = hourIndex
                   const hourSlots = roomData.slots.filter(slot => {
                     const slotHour = new Date(slot.startTime).getHours()
                     return slotHour === hour
@@ -333,20 +335,20 @@ export default function AvailabilityGrid({
             {/* Legend */}
             <div className="flex flex-wrap items-center gap-4 pt-2 border-t text-xs">
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-green-50 border border-green-200"></div>
+                <div className="w-3 h-3 rounded bg-green-100 border border-green-300"></div>
                 <span className="text-muted-foreground">Available</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-destructive/10 border border-destructive/20"></div>
-                <span className="text-muted-foreground">Booked</span>
+                <div className="w-3 h-3 rounded bg-red-500 border border-red-600"></div>
+                <span className="text-muted-foreground">Booked by Others</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-blue-100 border border-blue-200"></div>
+                <div className="w-3 h-3 rounded bg-blue-500 border border-blue-600"></div>
                 <span className="text-muted-foreground">My Booking</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-muted opacity-50"></div>
-                <span className="text-muted-foreground">Past</span>
+                <div className="w-3 h-3 rounded bg-muted opacity-50 border border-muted"></div>
+                <span className="text-muted-foreground">Past Time</span>
               </div>
             </div>
           </CardContent>
