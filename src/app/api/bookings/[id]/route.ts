@@ -27,13 +27,7 @@ export async function PUT(
     }
 
     const { id } = await params
-    const bookingId = parseInt(id)
-    if (isNaN(bookingId)) {
-      return NextResponse.json(
-        { error: 'Invalid booking ID' },
-        { status: 400 }
-      )
-    }
+    const bookingId = id
 
     // Get existing booking
     const existingBooking = await db.booking.findUnique({
@@ -221,13 +215,7 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const bookingId = parseInt(id)
-    if (isNaN(bookingId)) {
-      return NextResponse.json(
-        { error: 'Invalid booking ID' },
-        { status: 400 }
-      )
-    }
+    const bookingId = id
 
     // Get existing booking
     const existingBooking = await db.booking.findUnique({
