@@ -151,7 +151,7 @@ export default function AvailabilityGrid({
 
       // Parse dates from strings if needed
       const startTime = new Date(startSlot.startTime)
-      const endTime = new Date(slot.endTime)
+      // const endTime = new Date(slot.endTime)
       const slotStartTime = new Date(slot.startTime)
 
       // Ensure end is after start

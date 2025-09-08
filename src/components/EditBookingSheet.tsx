@@ -170,7 +170,7 @@ export default function EditBookingSheet({
         const minutes = durationMinutes % 60
         return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`
       }
-    } catch (error) {
+    } catch {
       return '0 minutes'
     }
   }

@@ -107,7 +107,13 @@ export default function MyBookingsSection({ onEditBooking }: MyBookingsSectionPr
     setDamageReportOpen(true)
   }
 
-  const handleDamageReportSubmit = async (reportData: any) => {
+  const handleDamageReportSubmit = async (reportData: {
+    bookingId: string;
+    roomId: string;
+    reporterId: string;
+    description: string;
+    photos: string[];
+  }) => {
     try {
       const response = await fetch('/api/damage-reports', {
         method: 'POST',
