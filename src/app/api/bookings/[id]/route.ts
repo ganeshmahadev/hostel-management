@@ -187,7 +187,7 @@ export async function PUT(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid update data', details: error.errors },
+        { error: 'Invalid update data', details: error.issues },
         { status: 400 }
       )
     }

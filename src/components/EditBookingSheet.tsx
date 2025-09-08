@@ -137,9 +137,9 @@ export default function EditBookingSheet({
       setErrors({})
       return true
     } catch (error) {
-      if (error instanceof z.ZodError && error.errors && Array.isArray(error.errors)) {
+      if (error instanceof z.ZodError && error.issues && Array.isArray(error.issues)) {
         const newErrors: Record<string, string> = {}
-        error.errors.forEach(err => {
+        error.issues.forEach(err => {
           if (err.path && err.path[0]) {
             newErrors[err.path[0] as string] = err.message
           }

@@ -78,10 +78,10 @@ export default function BookingSheet({
       console.log('Error instanceof z.ZodError:', error instanceof z.ZodError)
       if (error instanceof z.ZodError) {
         console.log('ZodError details:', error)
-        console.log('error.errors:', error.errors)
-        if (error.errors && Array.isArray(error.errors)) {
+        console.log('error.issues:', error.issues)
+        if (error.issues && Array.isArray(error.issues)) {
           const newErrors: Record<string, string> = {}
-          error.errors.forEach(err => {
+          error.issues.forEach(err => {
             console.log('Processing error:', err)
             if (err.path && err.path[0]) {
               newErrors[err.path[0] as string] = err.message
@@ -89,7 +89,7 @@ export default function BookingSheet({
           })
           setErrors(newErrors)
         } else {
-          console.error('error.errors is not an array:', error.errors)
+          console.error('error.issues is not an array:', error.issues)
           setErrors({ general: 'Validation error occurred' })
         }
       } else {
