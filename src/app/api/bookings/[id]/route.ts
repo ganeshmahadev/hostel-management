@@ -14,7 +14,7 @@ const updateBookingSchema = z.object({
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth()
@@ -26,7 +26,8 @@ export async function PUT(
       )
     }
 
-    const bookingId = parseInt(params.id)
+    const { id } = await params
+    const bookingId = parseInt(id)
     if (isNaN(bookingId)) {
       return NextResponse.json(
         { error: 'Invalid booking ID' },
@@ -207,7 +208,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth()
@@ -219,7 +220,8 @@ export async function DELETE(
       )
     }
 
-    const bookingId = parseInt(params.id)
+    const { id } = await params
+    const bookingId = parseInt(id)
     if (isNaN(bookingId)) {
       return NextResponse.json(
         { error: 'Invalid booking ID' },

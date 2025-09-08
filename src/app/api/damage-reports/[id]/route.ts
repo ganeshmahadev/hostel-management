@@ -3,12 +3,13 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const damageReport = await db.damageReport.findUnique({
       where: {
-        id: params.id
+        id: id
       },
       include: {
         booking: {
@@ -51,15 +52,16 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const { status, assessedBy, penalty } = body
 
     const damageReport = await db.damageReport.update({
       where: {
-        id: params.id
+        id: id
       },
       data: {
         status: status?.toUpperCase(),
@@ -101,12 +103,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await db.damageReport.delete({
       where: {
-        id: params.id
+        id: id
       }
     })
 
